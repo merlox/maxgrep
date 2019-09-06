@@ -20,15 +20,29 @@ impl Config {
 
 // The dyn means dynamic which indicates that the Error can be of many different types and we're storing it
 // into the heap with the Box<> element
-pub fn read_file(file_name: &str) -> Result<(), Box<dyn Error>> {
-    let file_contents = fs::read_to_string(file_name)?;
+pub fn start(configuration: Config) -> Result<(), Box<dyn Error>> {
+    let file_contents = fs::read_to_string(configuration.file_name)?;
+    for line in search_case_sensitive(&configuration.search, &file_contents) {
+        println!("{}", line);
+    }
     Ok(())
 }
 
-pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+pub fn search_case_sensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     let mut matching_lines = Vec::new();
     for line in contents.lines() {
         if line.contains(query) {
+            matching_lines.push(line);
+        }
+    }
+    matching_lines
+}
+
+pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    let query = query.to_lowercase();
+    let mut matching_lines = Vec::new();
+    for line in contents.lines() {
+        if line.to_lowercase().contains(&query) {
             matching_lines.push(line);
         }
     }
@@ -40,8 +54,25 @@ mod LibTests {
     use super::*;
 
     #[test]
-    fn one_result() {
+    fn case_sensitive() {
         let search_query = "car";
+        let contents = "
+So there's
+this cartoon dealing
+with drugs and such
+the Cartel.
+        ";
+
+        assert_eq!(
+            vec!["this cartoon dealing"],
+            search_case_sensitive(search_query, contents),
+            "The search function didn't find the contents properly"
+        );
+    }
+
+    #[test]
+    fn case_insensitive() {
+        let search_query = "CAR";
         let contents = "
 So there's
 this cartoon dealing
@@ -50,7 +81,7 @@ with drugs and such
 
         assert_eq!(
             vec!["this cartoon dealing"],
-            search(search_query, contents),
+            search_case_insensitive(search_query, contents),
             "The search function didn't find the contents properly"
         );
     }

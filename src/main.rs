@@ -8,9 +8,9 @@ fn main() {
         process::exit(1);
     });
 
-    println!("Searching {} in the {} file", configuration.search, configuration.file_name);
+    println!("Searching '{}' in the '{}' file:", configuration.search, configuration.file_name);
 
-    if let Err(e) = maxgrep::read_file(&configuration.file_name) {
+    if let Err(e) = maxgrep::start(configuration) {
         process::exit(1);
     }
 }
